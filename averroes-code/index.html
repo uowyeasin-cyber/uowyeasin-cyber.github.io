@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Averroes Code: offline code editor, compiler and courses</title>
+<meta name="description" content="Write, run and learn code fully offline. C, C++, Python, Java, JavaScript, TypeScript, HTML and CSS, with 23 video courses, unlimited practice, live contests and shareable certificates. Free for Windows, Linux and macOS.">
+<meta property="og:title" content="Averroes Code">
+<meta property="og:description" content="An offline code editor, compiler and learning studio. Created by YEASIN ARAFAT.">
+<meta property="og:image" content="https://uowyeasin-cyber.github.io/averroes-code/img/01-home.jpg">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root { --bg: #0b1029; --bg2: #121a3d; --line: rgba(255,255,255,.1); --text: #e8ecff; --muted: #9aa6d8; --blue: #2f8cff; --blue2: #6fc3ff; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; font-family: Inter, system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+a { color: var(--blue2); text-decoration: none; }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+nav { position: sticky; top: 0; z-index: 10; backdrop-filter: blur(12px); background: rgba(11,16,41,.75); border-bottom: 1px solid var(--line); }
+nav .wrap { display: flex; align-items: center; gap: 12px; height: 62px; }
+nav .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; color: #fff; }
+nav .brand span { color: var(--blue2); }
+nav .links { margin-left: auto; display: flex; gap: 22px; font-size: 14px; }
+nav .links a { color: var(--muted); }
+.hero { padding: 80px 0 40px; background: radial-gradient(ellipse at 70% 0%, rgba(47,140,255,.25), transparent 55%), radial-gradient(ellipse at 0% 60%, rgba(120,80,255,.18), transparent 50%); }
+.hero .wrap { display: grid; grid-template-columns: 1.1fr .9fr; gap: 40px; align-items: center; }
+.hero h1 { font-size: clamp(36px, 6vw, 60px); line-height: 1.05; letter-spacing: -.03em; margin: 0; }
+.hero h1 span { background: linear-gradient(90deg, var(--blue), var(--blue2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero p { font-size: 18px; color: var(--muted); max-width: 560px; }
+.pill { display: inline-block; font-size: 13px; padding: 5px 12px; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); margin-bottom: 18px; }
+.btns { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 26px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 22px; border-radius: 12px; font-weight: 600; font-size: 15px; border: 1px solid var(--line); color: #fff; background: rgba(255,255,255,.04); }
+.btn.primary { background: linear-gradient(180deg, #3d97ff, #1f6fe0); border-color: #3d97ff; box-shadow: 0 10px 30px rgba(47,140,255,.35); }
+.shot { border-radius: 14px; border: 1px solid var(--line); box-shadow: 0 30px 80px rgba(0,0,0,.5); width: 100%; display: block; }
+section { padding: 70px 0; }
+h2 { font-size: clamp(26px, 4vw, 38px); letter-spacing: -.02em; margin: 0 0 10px; }
+.sub { color: var(--muted); margin: 0 0 36px; }
+.dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.card { background: var(--bg2); border: 1px solid var(--line); border-radius: 16px; padding: 22px; }
+.card h3 { margin: 0 0 4px; font-size: 18px; }
+.card p { color: var(--muted); font-size: 14px; margin: 6px 0 16px; }
+.card .btn { width: 100%; justify-content: center; }
+.card .alt { display: block; text-align: center; font-size: 13px; margin-top: 10px; }
+.qr { display: grid; grid-template-columns: 220px 1fr; gap: 28px; align-items: center; margin-top: 28px; }
+.qr img { width: 220px; border-radius: 16px; background: #fff; padding: 8px; }
+.feat { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.feat .card h3 { font-size: 16px; }
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: center; margin-bottom: 60px; }
+.split.rev > :first-child { order: 2; }
+.split h3 { font-size: 24px; margin: 0 0 8px; letter-spacing: -.01em; }
+.split p { color: var(--muted); }
+footer { border-top: 1px solid var(--line); padding: 30px 0; color: var(--muted); font-size: 14px; }
+footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+@media (max-width: 860px) {
+  .hero .wrap, .split, .qr { grid-template-columns: 1fr; }
+  .split.rev > :first-child { order: 0; }
+  .dl, .feat { grid-template-columns: 1fr; }
+  nav .links { display: none; }
+  .qr img { width: 180px; }
+}
+</style>
+</head>
+<body>
+<nav><div class="wrap"><a class="brand" href="#"><img src="logo.svg" width="30" height="30" alt="">Averroes <span>Code</span></a>
+<div class="links"><a href="#download">Download</a><a href="#features">Features</a><a href="#learn">Courses</a><a href="Averroes-Code-User-Manual.pdf">Manual</a></div></div></nav>
+
+<header class="hero"><div class="wrap">
+<div>
+<div class="pill">Version 0.3.0 · Free · Works without internet</div>
+<h1>Write, run and learn code. <span>Fully offline.</span></h1>
+<p>Averroes Code is a professional code editor and compiler for C, C++, Python, Java, JavaScript, TypeScript, HTML and CSS. It also has 23 video courses in English and Bangla, unlimited practice, live contests and certificates you can share.</p>
+<div class="btns"><a class="btn primary" id="main-dl" href="#download">Download for free</a><a class="btn" href="Averroes-Code-User-Manual.pdf">Read the manual</a></div>
+</div>
+<img class="shot" src="img/01-home.jpg" alt="Averroes Code home screen">
+</div></header>
+
+<section id="download"><div class="wrap">
+<h2>Download</h2>
+<p class="sub">Choose your computer. No account needed.</p>
+<div class="dl">
+<div class="card"><h3>Windows</h3><p>Windows 10 and 11, 64-bit. Unzip, then run the installer.</p>
+<a class="btn primary" href="https://github.com/uowyeasin-cyber/uowyeasin-cyber.github.io/releases/download/v0.3.0/Averroes-Code-Setup-0.3.0-Windows.zip">Download installer</a>
+<a class="alt" href="https://github.com/uowyeasin-cyber/uowyeasin-cyber.github.io/releases/download/v0.3.0/Averroes-Code-0.3.0-portable-Windows.zip">Portable version (no install)</a></div>
+<div class="card"><h3>Linux</h3><p>Ubuntu, Fedora, Debian and most others. Make it executable, then double-click.</p>
+<a class="btn primary" href="https://github.com/uowyeasin-cyber/uowyeasin-cyber.github.io/releases/download/v0.3.0/Averroes-Code-0.3.0-linux-x86_64.AppImage">Download AppImage</a></div>
+<div class="card"><h3>macOS</h3><p>Intel and Apple Silicon. The Mac version is coming soon.</p>
+<a class="btn" href="https://github.com/uowyeasin-cyber/uowyeasin-cyber.github.io/releases/tag/v0.3.0">See all downloads</a></div>
+</div>
+<div class="qr"><img src="qr.png" alt="QR code for this download page">
+<div><h3 style="margin:0 0 6px">Scan to open this page</h3><p class="sub" style="margin:0">Point your phone camera at the code to open the download page, then send the link to your computer. Windows may say “Windows protected your PC” because the app is new: click <b>More info</b>, then <b>Run anyway</b>.</p></div></div>
+</div></section>
+
+<section id="features" style="background:var(--bg2)"><div class="wrap">
+<h2>Everything in one app</h2>
+<p class="sub">Made for beginners, comfortable for professionals.</p>
+<div class="feat">
+<div class="card"><h3>One-click Run</h3><p>Compile and run eight languages, with an input box and friendly error help.</p></div>
+<div class="card"><h3>Three modes</h3><p>Beginner, Pro and Developer. Switch instantly; the layout adapts to you.</p></div>
+<div class="card"><h3>Live web preview</h3><p>See HTML and CSS update as you save, on your computer and on your phone.</p></div>
+<div class="card"><h3>AI helper</h3><p>Explain, fix and write code, with an offline helper or your own online key.</p></div>
+<div class="card"><h3>GitHub and sharing</h3><p>Push a project in one click. Save code as PDF, image, Word, Markdown or zip.</p></div>
+<div class="card"><h3>Terminal and tools</h3><p>Integrated terminal, snippets, Assembly and Bytecode views, extensions.</p></div>
+</div>
+</div></section>
+
+<section id="learn"><div class="wrap">
+<div class="split"><div><h3>23 video courses, A to Z</h3><p>Animated lessons with a narrator and captions, in English or Bangla. Each lesson has runnable code, notes, a quiz and a practice exercise checked by the judge. The courses cover languages, web, databases, servers, cloud, DevOps, operating systems, networking, DSA, machine learning, data analytics, AI and BI.</p></div><img class="shot" src="img/14b-video-bangla.jpg" alt="A lesson playing in Bangla"></div>
+<div class="split rev"><div><h3>Unlimited practice and live contests</h3><p>New problems are created every time, by topic and level. Live contests show a top-10 board and your position in real time, and tournaments go from Qualifier to Final.</p></div><img class="shot" src="img/12-contest.jpg" alt="A live contest"></div>
+<div class="split"><div><h3>Certificates and 3D awards</h3><p>Earn a medal shaped for each topic at 25%, 50%, 75% and 100%, a certificate for every module, and a Graduate Certificate when you finish a course. Add them to LinkedIn or share on Facebook and X.</p></div><img class="shot" src="img/medals-all.jpg" alt="Topic medals"></div>
+<div class="split rev"><div><h3>Signed and shareable</h3><p>Each certificate has a unique ID and the founder's signature, and is ready to save as an image or PDF.</p></div><img class="shot" src="img/grad.jpg" alt="Graduate certificate"></div>
+</div></section>
+
+<footer><div class="wrap"><div>Averroes Code 0.3.0 · Created by <b style="color:#fff">YEASIN ARAFAT</b></div><div><a href="Averroes-Code-User-Manual.pdf">User manual (PDF)</a></div></div></footer>
+<script>
+// Point the big button at the right file for this computer.
+(function () {
+  var b = document.getElementById('main-dl'); if (!b) return;
+  var u = navigator.userAgent, base = 'https://github.com/uowyeasin-cyber/uowyeasin-cyber.github.io/releases/download/v0.3.0/';
+  if (/Windows/i.test(u)) { b.href = base + 'Averroes-Code-Setup-0.3.0-Windows.zip'; b.textContent = 'Download for Windows'; }
+  else if (/Linux/i.test(u) && !/Android/i.test(u)) { b.href = base + 'Averroes-Code-0.3.0-linux-x86_64.AppImage'; b.textContent = 'Download for Linux'; }
+})();
+</script>
+</body>
+</html>
