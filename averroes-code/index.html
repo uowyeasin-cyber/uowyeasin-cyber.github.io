@@ -37,6 +37,10 @@ nav .links a { color: var(--muted); }
 section { padding: 70px 0; }
 h2 { font-size: clamp(26px, 4vw, 38px); letter-spacing: -.02em; margin: 0 0 10px; }
 .sub { color: var(--muted); margin: 0 0 36px; }
+.card.phone { margin-top: 16px; display: flex; align-items: center; gap: 20px; justify-content: space-between; }
+.card.phone p { margin: 6px 0 0; }
+.card.phone > div { flex: 1; min-width: 0; }
+.card.phone .btn { flex: none; width: auto; margin: 0; }
 .dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .card { background: var(--bg2); border: 1px solid var(--line); border-radius: 16px; padding: 22px; }
 .card h3 { margin: 0 0 4px; font-size: 18px; }
@@ -57,6 +61,8 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
   .hero .wrap, .split, .qr { grid-template-columns: 1fr; }
   .split.rev > :first-child { order: 0; }
   .dl, .feat { grid-template-columns: 1fr; }
+  .card.phone { flex-direction: column; align-items: stretch; }
+  .card.phone .btn { width: 100%; }
   nav .links { display: none; }
   .qr img { width: 180px; }
 }
@@ -88,6 +94,8 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
 <div class="card"><h3>macOS</h3><p>Intel and Apple Silicon. The Mac version is coming soon.</p>
 <a class="btn" href="https://github.com/uowyeasin-cyber/uowyeasin-cyber.github.io/releases/tag/v0.3.0">See all downloads</a></div>
 </div>
+<div class="card phone"><div><h3>Phone: Android and iPhone</h3><p>Write and run Python, JavaScript and web pages, take the 23 courses and solve practice problems on your phone. Works offline after the first visit. Open it, then tap <b>Install app</b> (Android, Chrome) or <b>Share → Add to Home Screen</b> (iPhone, Safari).</p></div>
+<a class="btn primary" href="app/">Open the phone app</a></div>
 <div class="qr"><img src="qr.png" alt="QR code for this download page">
 <div><h3 style="margin:0 0 6px">Scan to open this page</h3><p class="sub" style="margin:0">Point your phone camera at the code to open the download page, then send the link to your computer. Windows may say “Windows protected your PC” because the app is new: click <b>More info</b>, then <b>Run anyway</b>.</p></div></div>
 </div></section>
@@ -118,6 +126,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
 (function () {
   var b = document.getElementById('main-dl'); if (!b) return;
   var u = navigator.userAgent, base = 'https://github.com/uowyeasin-cyber/uowyeasin-cyber.github.io/releases/download/v0.3.0/';
+  if (/Android|iPhone|iPad|iPod/i.test(u)) { b.href = 'app/'; b.textContent = 'Open the phone app'; return; }
   if (/Windows/i.test(u)) { b.href = base + 'Averroes-Code-Setup-0.3.0-Windows.zip'; b.textContent = 'Download for Windows'; }
   else if (/Linux/i.test(u) && !/Android/i.test(u)) { b.href = base + 'Averroes-Code-0.3.0-linux-x86_64.AppImage'; b.textContent = 'Download for Linux'; }
 })();
