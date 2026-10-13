@@ -120,7 +120,8 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
   var b = document.getElementById('main-dl'); if (!b) return;
   var u = navigator.userAgent, base = 'https://github.com/uowyeasin-cyber/uowyeasin-cyber.github.io/releases/download/v0.3.1/';
   if (/Windows/i.test(u)) { b.href = base + 'Averroes-Code-Setup-0.3.1-Windows.zip'; b.textContent = 'Download for Windows'; }
-  else if (/Macintosh|Mac OS X/i.test(u)) { b.href = base + 'Averroes-Code-0.3.1-mac-AppleSilicon.zip'; b.textContent = 'Download for Mac'; }
+  // Safari reports Intel even on Apple Silicon, so Mac visitors choose their chip in the download section.
+  else if (/Macintosh|Mac OS X/i.test(u)) { b.href = '#download'; b.textContent = 'Download for Mac'; }
   else if (/Linux/i.test(u) && !/Android/i.test(u)) { b.href = base + 'Averroes-Code-0.3.1-linux-x86_64.AppImage'; b.textContent = 'Download for Linux'; }
 })();
 </script>
