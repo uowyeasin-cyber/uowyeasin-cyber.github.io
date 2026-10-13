@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verify a credential · Averroes Code</title>
+<meta name="description" content="Check that an Averroes Code certificate or award is real.">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root { --bg: #0b1029; --bg2: #121a3d; --line: rgba(255,255,255,.1); --text: #e8ecff; --muted: #9aa6d8; --blue: #2f8cff; --blue2: #6fc3ff; --ok: #34d399; --bad: #f87171; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Inter, system-ui, sans-serif; background: radial-gradient(ellipse at 70% 0%, rgba(47,140,255,.2), transparent 55%), var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; }
+a { color: var(--blue2); text-decoration: none; }
+.wrap { max-width: 720px; margin: 0 auto; padding: 0 20px; }
+nav { border-bottom: 1px solid var(--line); }
+nav .wrap { display: flex; align-items: center; gap: 10px; height: 62px; font-weight: 700; font-size: 18px; }
+nav span { color: var(--blue2); }
+h1 { font-size: clamp(28px, 5vw, 40px); letter-spacing: -.02em; margin: 56px 0 8px; }
+.sub { color: var(--muted); margin: 0 0 28px; }
+form { display: flex; gap: 10px; flex-wrap: wrap; }
+input { flex: 1; min-width: 220px; padding: 13px 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg2); color: var(--text); font: 600 16px Inter, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
+button { padding: 13px 22px; border-radius: 12px; border: 1px solid #3d97ff; background: linear-gradient(180deg, #3d97ff, #1f6fe0); color: #fff; font: 600 15px Inter, sans-serif; cursor: pointer; }
+.result { margin-top: 28px; padding: 24px; border-radius: 16px; border: 1px solid var(--line); background: var(--bg2); display: none; }
+.result.show { display: block; }
+.result.ok { border-color: rgba(52,211,153,.5); }
+.result.bad { border-color: rgba(248,113,113,.5); }
+.badge { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; }
+.ok .badge { color: var(--ok); }
+.bad .badge { color: var(--bad); }
+dl { display: grid; grid-template-columns: 140px 1fr; gap: 8px 16px; margin: 18px 0 0; }
+dt { color: var(--muted); }
+dd { margin: 0; font-weight: 600; }
+.note { color: var(--muted); font-size: 14px; margin-top: 14px; }
+@media (max-width: 560px) { dl { grid-template-columns: 1fr; gap: 2px; } dd { margin-bottom: 8px; } }
+</style>
+</head>
+<body>
+<nav><div class="wrap"><a href="./" style="color:inherit;display:flex;align-items:center;gap:10px"><img src="logo.svg" width="30" height="30" alt="">Averroes&nbsp;<span>Code</span></a></div></nav>
+<main class="wrap">
+<h1>Verify a credential</h1>
+<p class="sub">Type the credential ID printed on an Averroes Code certificate or award, for example AVC-7536-CE84-6A5E.</p>
+<form id="f"><input id="id" placeholder="AVC-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" maxlength="18"><button>Check</button></form>
+<div id="out" class="result"></div>
+</main>
+<script>
+// Public read of the certificate record (Firestore rules allow only reading single IDs).
+const KEY = 'AIzaSyCzrq7-bUqGZ0XbKyH97UEAcP4Noi26FFM';
+const DB = 'https://firestore.googleapis.com/v1/projects/averroes-code-5a5b8/databases/(default)/documents/certs/';
+const KINDS = { course: 'Graduate certificate', module: 'Module certificate', award: 'Course award', achievement: 'Award / certificate' };
+const out = document.getElementById('out');
+const input = document.getElementById('id');
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function show(cls, html) { out.className = `result show ${cls}`; out.innerHTML = html; }
+async function check(raw) {
+  const id = raw.trim().toUpperCase();
+  if (!/^AVC-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}$/.test(id)) return show('bad', '<div class="badge">✕ That is not a valid credential ID</div><p class="note">IDs look like AVC-7536-CE84-6A5E (letters A to F and numbers).</p>');
+  history.replaceState(null, '', `?id=${id}`);
+  show('', 'Checking…');
+  try {
+    const res = await fetch(`${DB}${id}?key=${KEY}`);
+    if (res.status === 404 || res.status === 403) {
+      return show('bad', `<div class="badge">✕ No record of ${esc(id)}</div><p class="note">If the certificate was made while the app was offline, its ID is saved the next time the app is opened with internet. Ask the owner to open the certificate once while online, then check again.</p>`);
+    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const f = (await res.json()).fields || {};
+    const v = (k) => (f[k] ? f[k].stringValue ?? f[k].integerValue : '');
+    const date = new Date(Number(v('issued'))).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    show('ok', `<div class="badge">✓ Verified credential</div>
+<dl><dt>Credential ID</dt><dd>${esc(id)}</dd><dt>Awarded to</dt><dd>${esc(v('name'))}</dd><dt>Title</dt><dd>${esc(v('title'))}</dd>${v('detail') ? `<dt>For</dt><dd>${esc(v('detail'))}</dd>` : ''}<dt>Type</dt><dd>${esc(KINDS[v('kind')] || v('kind'))}</dd><dt>Issued</dt><dd>${esc(date)}</dd><dt>Issued by</dt><dd>Averroes Code</dd></dl>`);
+  } catch (err) {
+    show('bad', `<div class="badge">Could not check right now</div><p class="note">${esc(err.message)}. Check your internet connection and try again.</p>`);
+  }
+}
+document.getElementById('f').addEventListener('submit', (e) => { e.preventDefault(); check(input.value); });
+const q = new URLSearchParams(location.search).get('id');
+if (q) { input.value = q; check(q); }
+</script>
+</body>
+</html>
