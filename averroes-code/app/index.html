@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Averroes Code</title>
+<meta name="description" content="Write, run and learn code on your phone. Works offline after the first visit.">
+<meta name="theme-color" content="#0b1029">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Averroes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><img src="icons/icon.svg" alt="" width="26" height="26"><span>Averroes <b>Code</b></span></div>
+  <button id="install" class="chip hidden" type="button">Install app</button>
+  <span id="net" class="net"></span>
+</header>
+<main id="view"></main>
+<nav class="tabs">
+  <button data-tab="code" type="button"><svg viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg><span>Code</span></button>
+  <button data-tab="learn" type="button"><svg viewBox="0 0 24 24"><path d="M3 8l9-4 9 4-9 4zM7 10v5c0 1.5 2.5 3 5 3s5-1.5 5-3v-5"/></svg><span>Learn</span></button>
+  <button data-tab="practice" type="button"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 21h8"/></svg><span>Practice</span></button>
+  <button data-tab="more" type="button"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg><span>More</span></button>
+</nav>
+<div id="sheet" class="sheet hidden"></div>
+<script type="module" src="app.js"></script>
+</body>
+</html>
