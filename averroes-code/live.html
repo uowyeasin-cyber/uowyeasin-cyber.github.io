@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live standings · Averroes Code</title>
+<meta name="description" content="Live positions and scores of Averroes Code contests and tournaments.">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root { --bg: #0b1029; --bg2: #121a3d; --line: rgba(255,255,255,.1); --text: #e8ecff; --muted: #9aa6d8; --blue: #2f8cff; --blue2: #6fc3ff; --ok: #34d399; --bad: #f87171; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Inter, system-ui, sans-serif; background: radial-gradient(ellipse at 70% 0%, rgba(47,140,255,.2), transparent 55%), var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; }
+a { color: var(--blue2); text-decoration: none; }
+.wrap { max-width: 860px; margin: 0 auto; padding: 0 20px; }
+nav { border-bottom: 1px solid var(--line); }
+nav .wrap { display: flex; align-items: center; gap: 10px; height: 62px; font-weight: 700; font-size: 18px; }
+nav span { color: var(--blue2); }
+h1 { font-size: clamp(28px, 5vw, 40px); letter-spacing: -.02em; margin: 56px 0 8px; }
+.sub { color: var(--muted); margin: 0 0 28px; }
+form { display: flex; gap: 10px; flex-wrap: wrap; }
+input { flex: 1; min-width: 220px; padding: 13px 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg2); color: var(--text); font: 600 16px Inter, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
+button { padding: 13px 22px; border-radius: 12px; border: 1px solid #3d97ff; background: linear-gradient(180deg, #3d97ff, #1f6fe0); color: #fff; font: 600 15px Inter, sans-serif; cursor: pointer; }
+.result { margin-top: 28px; padding: 24px; border-radius: 16px; border: 1px solid var(--line); background: var(--bg2); display: none; }
+.result.show { display: block; }
+.result.ok { border-color: rgba(52,211,153,.5); }
+.result.bad { border-color: rgba(248,113,113,.5); }
+.badge { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; }
+.ok .badge { color: var(--ok); }
+.bad .badge { color: var(--bad); }
+dl { display: grid; grid-template-columns: 140px 1fr; gap: 8px 16px; margin: 18px 0 0; }
+dt { color: var(--muted); }
+dd { margin: 0; font-weight: 600; }
+.note { color: var(--muted); font-size: 14px; margin-top: 14px; }
+@media (max-width: 560px) { dl { grid-template-columns: 1fr; gap: 2px; } dd { margin-bottom: 8px; } }
+
+.row { display: grid; grid-template-columns: 44px 1fr auto 70px; gap: 10px; align-items: center; padding: 10px 14px; border-radius: 12px; background: var(--bg2); border: 1px solid var(--line); margin-bottom: 6px; }
+.row .rk { font-weight: 700; color: var(--muted); }
+.row.m1 .rk { color: #f6c453; } .row.m2 .rk { color: #d6dbe6; } .row.m3 .rk { color: #e09a5f; }
+.row .nm { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .nm small { color: var(--muted); font-weight: 400; margin-left: 6px; }
+.row .sv { color: var(--muted); font-size: 14px; }
+.row .pt { text-align: right; font-weight: 700; font-size: 18px; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #ef4444; margin-right: 8px; animation: pulse 1.4s infinite; }
+@keyframes pulse { 50% { opacity: .3; } }
+.bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 0 0 18px; }
+select { padding: 11px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg2); color: var(--text); font: 600 14px Inter, sans-serif; max-width: 100%; }
+.btn2 { padding: 11px 18px; border-radius: 12px; border: 1px solid var(--line); background: transparent; color: var(--text); font: 600 14px Inter, sans-serif; cursor: pointer; }
+.cta { margin: 34px 0 60px; padding: 22px; border-radius: 16px; border: 1px solid var(--line); background: var(--bg2); }
+@media (max-width: 560px) { .row { grid-template-columns: 34px 1fr 56px; } .row .sv { display: none; } }
+</style>
+</head>
+<body>
+<nav><div class="wrap"><a href="./" style="color:inherit;display:flex;align-items:center;gap:10px"><img src="logo.svg" width="30" height="30" alt="">Averroes&nbsp;<span>Code</span></a></div></nav>
+<main class="wrap">
+<h1><span class="dot"></span><span id="title">Live standings</span></h1>
+<p class="sub" id="sub">Loading…</p>
+<div class="bar">
+  <select id="pick" aria-label="Contest"></select>
+  <button id="copy">Copy link</button>
+  <button class="btn2" id="wa">WhatsApp</button>
+  <button class="btn2" id="fb">Facebook</button>
+</div>
+<div id="board"></div>
+<div class="cta"><strong>Want to play?</strong><p class="note" style="margin-top:6px">Install Averroes Code (free), open <b>Contests</b> and play today's Daily Global Contest or this week's tournament. Your score shows here live.</p><a href="./#download"><button>Download Averroes Code</button></a></div>
+</main>
+<script>
+const KEY = 'AIzaSyCzrq7-bUqGZ0XbKyH97UEAcP4Noi26FFM';
+const DB = 'https://firestore.googleapis.com/v1/projects/averroes-code-5a5b8/databases/(default)/documents/contests/';
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const num = (f) => (f ? Number(f.integerValue ?? f.doubleValue ?? 0) : 0);
+function week(now = Date.now()) {
+  const d = new Date(now); const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7)); const y = t.getUTCFullYear();
+  return `${y}-W${String(Math.ceil(((t - Date.UTC(y, 0, 1)) / 86400000 + 1) / 7)).padStart(2, '0')}`;
+}
+const TOURS = { weekend: ['Weekend Cup', ['Qualifier', 'Semi-final', 'Final']], speed: ['Speed Cup', ['Qualifier', 'Final']], champions: ['Champions League', ['Qualifier', 'Quarter-final', 'Semi-final', 'Final']] };
+const day = new Date().toISOString().slice(0, 10); const w = week();
+const list = [{ id: `daily-${day}`, title: `Daily Global Contest · ${day}` }];
+for (const [k, [name, rounds]] of Object.entries(TOURS)) rounds.forEach((r, i) => list.push({ id: `${k}-${w}-r${i}`, title: `${name} ${w}: ${r}` }));
+const q = new URLSearchParams(location.search);
+let cur = q.get('c') && /^[\w-]{3,80}$/.test(q.get('c')) ? { id: q.get('c'), title: q.get('n') || q.get('c') } : list[0];
+if (!list.some((c) => c.id === cur.id)) list.unshift(cur);
+const pick = document.getElementById('pick');
+pick.innerHTML = list.map((c) => `<option value="${esc(c.id)}"${c.id === cur.id ? ' selected' : ''}>${esc(c.title)}</option>`).join('');
+const link = () => `${location.origin}${location.pathname}?c=${encodeURIComponent(cur.id)}&n=${encodeURIComponent(cur.title)}`;
+let timer;
+async function load() {
+  clearTimeout(timer);
+  document.getElementById('title').textContent = cur.title;
+  history.replaceState(null, '', link());
+  try {
+    const [rows, agg] = await Promise.all([
+      fetch(`${DB}${cur.id}:runQuery?key=${KEY}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ structuredQuery: { from: [{ collectionId: 'scores' }], orderBy: [{ field: { fieldPath: 'total' }, direction: 'DESCENDING' }], limit: 100 } }) }).then((r) => r.json()),
+      fetch(`${DB}${cur.id}:runAggregationQuery?key=${KEY}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ structuredAggregationQuery: { structuredQuery: { from: [{ collectionId: 'scores' }] }, aggregations: [{ alias: 'n', count: {} }] } }) }).then((r) => r.json()),
+    ]);
+    const people = (Array.isArray(rows) ? rows : []).filter((x) => x.document).map((x) => { const f = x.document.fields || {}; return { name: (f.name && f.name.stringValue) || 'Player', rating: num(f.rating), total: num(f.total), solved: num(f.solved), penalty: num(f.penalty) }; });
+    people.sort((a, b) => b.total - a.total || b.solved - a.solved || a.penalty - b.penalty);
+    const r0 = (Array.isArray(agg) ? agg : [agg]).find((x) => x && x.result);
+    const n = r0 ? num(r0.result.aggregateFields.n) : people.length;
+    let rank = 0;
+    document.getElementById('board').innerHTML = people.length ? people.map((p, i, a) => { if (i === 0 || p.total !== a[i - 1].total) rank = i + 1; return `<div class="row m${rank}"><span class="rk">#${rank}</span><span class="nm">${esc(p.name)}<small>${p.rating}</small></span><span class="sv">${p.solved} solved</span><span class="pt">${p.total}</span></div>`; }).join('') : '<p class="note">Nobody has played this one yet. Be the first!</p>';
+    document.getElementById('sub').textContent = `${n} ${n === 1 ? 'player' : 'players'} · updated ${new Date().toLocaleTimeString()} · refreshes every 10 seconds`;
+  } catch (e) {
+    document.getElementById('sub').textContent = 'Could not load the board right now. Trying again…';
+  }
+  timer = setTimeout(load, 10000);
+}
+pick.onchange = () => { cur = list.find((c) => c.id === pick.value); load(); };
+document.getElementById('copy').onclick = () => { navigator.clipboard.writeText(link()); document.getElementById('copy').textContent = 'Copied!'; setTimeout(() => { document.getElementById('copy').textContent = 'Copy link'; }, 1500); };
+document.getElementById('wa').onclick = () => open(`https://wa.me/?text=${encodeURIComponent(`Live standings: ${cur.title} ${link()}`)}`);
+document.getElementById('fb').onclick = () => open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link())}`);
+load();
+</script>
+</body>
+</html>
