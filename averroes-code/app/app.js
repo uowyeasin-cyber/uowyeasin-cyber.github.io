@@ -90,11 +90,13 @@ function md(src) {
 const LANGS = {
   python: { name: 'Python', ext: 'py', starter: 'name = input("Your name: ")\nprint("Hello,", name)\n' },
   javascript: { name: 'JavaScript', ext: 'js', starter: 'const nums = [3, 1, 2];\nnums.sort((a, b) => a - b);\nconsole.log("Sorted:", nums.join(", "));\n' },
+  c: { name: 'C', ext: 'c', starter: '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf("%d %d", &a, &b);\n    printf("Sum = %d\\n", a + b);\n    return 0;\n}\n' },
+  cpp: { name: 'C++', ext: 'cpp', starter: '#include <iostream>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;\n    for (int i = 1; i <= n; i++) cout << i * i << " ";\n    cout << endl;\n    return 0;\n}\n' },
   html: { name: 'HTML / CSS / JS', ext: 'html', starter: '<!DOCTYPE html>\n<html>\n<head>\n<style>\n  body { font-family: sans-serif; text-align: center; padding: 30px; }\n  button { font-size: 20px; padding: 10px 20px; }\n</style>\n</head>\n<body>\n  <h1>Hello!</h1>\n  <button onclick="n++; this.textContent = \'Clicked \' + n">Click me</button>\n  <script>let n = 0;</script>\n</body>\n</html>\n' },
 };
 const workers = {};
 function worker(kind) {
-  if (!workers[kind]) workers[kind] = new Worker(kind === 'python' ? 'py-worker.js' : 'js-worker.js');
+  if (!workers[kind]) workers[kind] = new Worker(kind === 'python' ? 'py-worker.js' : kind === 'c' || kind === 'cpp' ? 'cpp-worker.js' : 'js-worker.js');
   return workers[kind];
 }
 // Run once with stdin; a stuck program is stopped after `limit` ms.
@@ -127,16 +129,61 @@ const sameOutput = (a, b) => {
   return x.length === y.length && x.every((v, i) => v === y[i]);
 };
 
-// An editor with a row of symbol keys that phone keyboards hide.
+// Colours for code: one regex per language, each match painted by its group.
+const KW = {
+  python: 'and as assert async await break class continue def del elif else except False finally for from global if import in is lambda None nonlocal not or pass raise return True try while with yield print input len range int str float list dict set',
+  javascript: 'async await break case catch class const continue default delete do else export extends false finally for function if import in instanceof let new null of return static super switch this throw true try typeof undefined var void while yield console',
+  c: 'auto break case char const continue default do double else enum extern float for goto if int long return short signed sizeof static struct switch typedef union unsigned void while bool true false include define using namespace std class public private protected new delete template typename cout cin endl vector string',
+  java: 'abstract boolean break byte case catch char class continue default do double else enum extends final finally float for if implements import int interface long new null package private protected public return short static super switch this throw throws true false try void while String System',
+};
+KW.cpp = KW.c;
+const escH = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+function paintCode(code, lang) {
+  if (lang === 'html') {
+    return escH(code).replace(/(&lt;!--[\s\S]*?--&gt;)|(&lt;\/?)([\w-]+)|([\w-]+)(=)(&quot;[^&]*&quot;|"[^"]*")/g,
+      (m, com, lt, tag, attr, eq, val) => (com ? `<i class="t-c">${com}</i>` : tag ? `${lt}<i class="t-k">${tag}</i>` : `<i class="t-a">${attr}</i>${eq}<i class="t-s">${val}</i>`));
+  }
+  const kws = new Set((KW[lang] || KW.python).split(' '));
+  const comment = lang === 'python' ? '#.*' : '\\/\\/.*|\\/\\*[\\s\\S]*?(?:\\*\\/|$)';
+  const re = new RegExp(`(${comment})|("(?:\\\\.|[^"\\\\\\n])*"?|'(?:\\\\.|[^'\\\\\\n])*'?|\`[^\`]*\`?)|(\\b\\d[\\d._]*\\b)|([A-Za-z_]\\w*)(\\s*\\()?|(#\\s*\\w+)`, 'g');
+  let out = ''; let last = 0;
+  code.replace(re, (m, com, str, num, word, call, pre, at) => {
+    out += escH(code.slice(last, at)); last = at + m.length;
+    if (com) out += `<i class="t-c">${escH(com)}</i>`;
+    else if (str) out += `<i class="t-s">${escH(str)}</i>`;
+    else if (num) out += `<i class="t-n">${num}</i>`;
+    else if (pre) out += `<i class="t-k">${escH(pre)}</i>`;
+    else if (kws.has(word)) out += `<i class="t-k">${word}</i>${call || ''}`;
+    else if (call) out += `<i class="t-f">${word}</i>${call}`;
+    else out += word;
+    return m;
+  });
+  return out + escH(code.slice(last));
+}
+
+// An editor with line numbers, colours and a row of symbol keys that phone keyboards hide.
 function editor(value, onChange, lang = 'python') {
   const ta = h('textarea', { spellcheck: 'false', autocapitalize: 'off', autocomplete: 'off', autocorrect: 'off', 'aria-label': 'Code' });
+  const gutter = h('div', { class: 'gutter', 'aria-hidden': 'true' });
+  const shade = h('pre', { class: 'shade', 'aria-hidden': 'true' });
   ta.value = value;
-  ta.addEventListener('input', () => onChange(ta.value));
+  const repaint = () => {
+    const n = ta.value.split('\n').length;
+    if (gutter.childElementCount !== n) gutter.textContent = Array.from({ length: n }, (_, i) => i + 1).join('\n');
+    shade.innerHTML = `${paintCode(ta.value, lang)}\n`;
+    shade.style.transform = `translate(${-ta.scrollLeft}px, ${-ta.scrollTop}px)`;
+    gutter.style.transform = `translateY(${-ta.scrollTop}px)`;
+  };
+  ta.addEventListener('scroll', () => {
+    shade.style.transform = `translate(${-ta.scrollLeft}px, ${-ta.scrollTop}px)`;
+    gutter.style.transform = `translateY(${-ta.scrollTop}px)`;
+  });
+  ta.addEventListener('input', () => { repaint(); onChange(ta.value); });
   const insert = (text, back = 0) => {
     const s = ta.selectionStart; const e = ta.selectionEnd;
     ta.setRangeText(text, s, e, 'end');
     if (back) ta.selectionStart = ta.selectionEnd = ta.selectionStart - back;
-    ta.focus(); onChange(ta.value);
+    ta.focus(); repaint(); onChange(ta.value);
   };
   ta.addEventListener('keydown', (e) => {
     if (e.key === 'Tab') { e.preventDefault(); insert('    '); }
@@ -150,8 +197,9 @@ function editor(value, onChange, lang = 'python') {
   const keys = ['⇥', '(', ')', '{', '}', '[', ']', ':', ';', '"', "'", '=', '<', '>', '+', '-', '*', '/', '%', '!', '&', '|', '#', '_', '.', ','];
   const pairs = { '(': ')', '{': '}', '[': ']', '"': '"', "'": "'" };
   const bar = h('div', { class: 'keys' }, ...keys.map((k) => h('button', { type: 'button', onmousedown: (e) => e.preventDefault(), onclick: () => (k === '⇥' ? insert('    ') : pairs[k] ? insert(k + pairs[k], 1) : insert(k)) }, k)));
-  const wrap = h('div', {}, h('div', { class: 'editor' }, ta), bar);
+  const wrap = h('div', {}, h('div', { class: 'editor' }, h('div', { class: 'gut' }, gutter), h('div', { class: 'code' }, shade, ta)), bar);
   wrap.textarea = ta;
+  requestAnimationFrame(repaint);
   wrap.lang = lang;
   return wrap;
 }
@@ -182,7 +230,7 @@ function codeTab() {
     stdin.classList.toggle('hidden', lang === 'html');
   }
   async function go() {
-    const code = files[lang] ?? '';
+    const code = files[lang] ?? LANGS[lang].starter;
     if (lang === 'html') return out.page(code);
     runBtn.disabled = true;
     out.show('Running…', lang === 'python' && !workers.pyReady ? 'Starting Python (the first time it downloads, then it works offline)…' : '');
@@ -198,7 +246,7 @@ function codeTab() {
       h('button', { class: 'btn', onclick: () => share(files[lang], `main.${LANGS[lang].ext}`) }, 'Share'),
       runBtn),
     ed, stdin, out.el,
-    h('p', { class: 'muted small' }, 'C, C++, Java and TypeScript run in the desktop app. On the phone you can run Python, JavaScript and web pages.'));
+    h('p', { class: 'muted small' }, 'On the phone you can run Python, JavaScript, C, C++ and web pages. C and C++ cover beginner programs (iostream, cstdio, cmath, arrays, functions); vector, string and Java need the desktop app.'));
 }
 async function share(text, name) {
   try {
@@ -425,6 +473,82 @@ async function problemView(id) {
 }
 
 // ---------- More tab ----------
+// ---------- My projects: the same account as the desktop app ----------
+const FB = { key: 'AIzaSyCzrq7-bUqGZ0XbKyH97UEAcP4Noi26FFM', project: 'averroes-code-5a5b8' };
+const FB_DOCS = `https://firestore.googleapis.com/v1/projects/${FB.project}/databases/(default)/documents`;
+async function fbFetch(url, body, method = 'POST', tok) {
+  const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: `Bearer ${tok}` } : {}) }, body: body ? JSON.stringify(body) : undefined });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error((data.error && data.error.message) || `HTTP ${res.status}`);
+  return data;
+}
+async function account() {
+  const a = store.get('account', null);
+  if (!a) return null;
+  if (a.expires > Date.now() + 60000) return a;
+  const r = await fbFetch(`https://securetoken.googleapis.com/v1/token?key=${FB.key}`, { grant_type: 'refresh_token', refresh_token: a.refreshToken });
+  Object.assign(a, { idToken: r.id_token, refreshToken: r.refresh_token, expires: Date.now() + Number(r.expires_in) * 1000 });
+  store.set('account', a);
+  return a;
+}
+const EXT_LANG = { py: 'python', js: 'javascript', c: 'c', h: 'c', cpp: 'cpp', cc: 'cpp', html: 'html', htm: 'html', java: 'java' };
+function syncBox() {
+  const box = h('div', { class: 'card' });
+  const signedOut = () => {
+    const email = h('input', { type: 'text', placeholder: 'Email', autocomplete: 'email', style: 'width:100%;margin-bottom:8px' });
+    const pass = h('input', { type: 'password', placeholder: 'Password', style: 'width:100%;margin-bottom:8px' });
+    const msg = h('p', { class: 'muted small' }, 'Use the same email as in the desktop app to see your projects here.');
+    const go = (create) => async () => {
+      msg.textContent = 'Please wait…';
+      try {
+        const r = await fbFetch(`https://identitytoolkit.googleapis.com/v1/accounts:${create ? 'signUp' : 'signInWithPassword'}?key=${FB.key}`, { email: email.value.trim(), password: pass.value, returnSecureToken: true });
+        store.set('account', { email: r.email, uid: r.localId, idToken: r.idToken, refreshToken: r.refreshToken, expires: Date.now() + Number(r.expiresIn) * 1000 });
+        paint();
+      } catch (e) {
+        const m = String(e.message);
+        msg.textContent = /INVALID_LOGIN|INVALID_PASSWORD|EMAIL_NOT_FOUND/.test(m) ? 'Wrong email or password.' : /EMAIL_EXISTS/.test(m) ? 'This email already has an account. Press Sign in.' : /WEAK_PASSWORD/.test(m) ? 'Use at least 6 characters.' : /OPERATION_NOT_ALLOWED|ADMIN_ONLY/.test(m) ? 'Email sign-in is not turned on yet.' : navigator.onLine ? m : 'No internet connection.';
+      }
+    };
+    box.replaceChildren(email, pass, h('div', { class: 'btns' }, h('button', { class: 'btn primary', onclick: go(false) }, 'Sign in'), h('button', { class: 'btn', onclick: go(true) }, 'Create account')), msg);
+  };
+  async function files(a, p) {
+    const r = await fbFetch(`${FB_DOCS}/users/${a.uid}/projects/${encodeURIComponent(p.key)}/files?pageSize=300`, null, 'GET', a.idToken);
+    const list = (r.documents || []).map((d) => ({ id: d.name.split('/').pop(), path: d.fields.path.stringValue, content: d.fields.content.stringValue || '', deleted: d.fields.deleted && d.fields.deleted.booleanValue })).filter((f) => !f.deleted).sort((x, y) => x.path.localeCompare(y.path));
+    box.replaceChildren(h('button', { class: 'back', onclick: paint }, '‹ My projects'), h('h3', {}, p.name),
+      ...list.map((f) => h('button', { class: 'btn', style: 'display:block;width:100%;text-align:left;margin-bottom:6px', onclick: () => open(a, p, f) }, f.path)));
+  }
+  function open(a, p, f) {
+    let code = f.content;
+    const lang = EXT_LANG[(f.path.split('.').pop() || '').toLowerCase()] || 'python';
+    const msg = h('span', { class: 'muted small' }, '');
+    const save = async () => {
+      msg.textContent = 'Saving…';
+      try {
+        const t = await account();
+        await fbFetch(`${FB_DOCS}/users/${t.uid}/projects/${encodeURIComponent(p.key)}/files/${f.id}`, { fields: { path: { stringValue: f.path }, content: { stringValue: code }, updated: { integerValue: String(Date.now()) }, deleted: { booleanValue: false } } }, 'PATCH', t.idToken);
+        f.content = code; msg.textContent = 'Saved. Your computer gets it at its next sync.';
+      } catch (e) { msg.textContent = navigator.onLine ? e.message : 'No internet. Try again when online.'; }
+    };
+    box.replaceChildren(h('button', { class: 'back', onclick: () => files(a, p) }, `‹ ${p.name}`), h('h3', {}, f.path),
+      editor(code, (v) => { code = v; }, lang), h('div', { class: 'btns' }, h('button', { class: 'btn primary', onclick: save }, 'Save'), msg));
+  }
+  async function paint() {
+    let a = null;
+    try { a = await account(); } catch { /* offline */ }
+    if (!a) return signedOut();
+    box.replaceChildren(h('p', { class: 'muted small' }, `Signed in as ${a.email}. Loading your projects…`));
+    try {
+      const r = await fbFetch(`${FB_DOCS}/users/${a.uid}/projects?pageSize=200`, null, 'GET', a.idToken);
+      const list = (r.documents || []).map((d) => ({ key: d.name.split('/').pop(), name: (d.fields && d.fields.name && d.fields.name.stringValue) || d.name.split('/').pop() }));
+      box.replaceChildren(h('p', { class: 'muted small' }, `Signed in as ${a.email}`),
+        ...(list.length ? list.map((p) => h('button', { class: 'btn', style: 'display:block;width:100%;text-align:left;margin-bottom:6px', onclick: () => files(a, p) }, `📁 ${p.name}`)) : [h('p', { class: 'muted' }, 'No projects yet. Sign in on the desktop app with the same email and open a project.')]),
+        h('button', { class: 'btn', onclick: () => { store.set('account', null); paint(); } }, 'Sign out'));
+    } catch (e) { box.replaceChildren(h('p', { class: 'muted' }, navigator.onLine ? e.message : 'Connect to the internet to see your projects.'), h('button', { class: 'btn', onclick: paint }, 'Try again')); }
+  }
+  paint();
+  return box;
+}
+
 function moreTab() {
   const p = progress();
   const lessons = Object.keys(p).length;
@@ -432,10 +556,12 @@ function moreTab() {
   return h('div', {},
     h('h1', {}, 'More'),
     h('div', { class: 'stat' }, h('div', { class: 'card' }, h('b', {}, String(lessons)), h('span', { class: 'muted small' }, 'lessons started')), h('div', { class: 'card' }, h('b', {}, String(solved)), h('span', { class: 'muted small' }, 'problems solved')), h('div', { class: 'card' }, h('b', {}, navigator.onLine ? 'On' : 'Off'), h('span', { class: 'muted small' }, 'internet'))),
+    h('h2', {}, 'My projects (same account as the computer)'),
+    syncBox(),
     h('h2', {}, 'Install on your phone'),
     installHelp(),
     h('h2', {}, 'Get the full app'),
-    h('p', { class: 'muted' }, 'The desktop app adds C, C++, Java and TypeScript, video courses with a narrator, contests with live boards, awards and certificates.'),
+    h('p', { class: 'muted' }, 'The desktop app adds full C and C++, Java and TypeScript, video courses with a narrator, contests with live boards, awards and certificates.'),
     h('a', { class: 'btn primary', href: '../#download' }, 'Download for Windows, Mac or Linux'),
     h('h2', {}, 'Offline'),
     h('p', { class: 'muted' }, 'Pages you open are saved on the phone. To keep every course and problem for offline use, download them once:'),
