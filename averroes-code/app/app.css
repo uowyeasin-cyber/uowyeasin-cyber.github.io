@@ -48,7 +48,15 @@ select, input[type=text] { font: inherit; color: var(--text); background: var(--
 /* editor */
 .edhead { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
 .editor { position: relative; border: 1px solid var(--line); border-radius: 12px; background: #070b1f; overflow: hidden; }
-.editor textarea { display: block; width: 100%; min-height: 42vh; resize: vertical; border: 0; outline: 0; background: transparent; color: #dfe6ff; font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; padding: 12px; tab-size: 4; white-space: pre; overflow: auto; }
+.editor { display: flex; }
+.editor .gut { flex: none; overflow: hidden; background: #050817; border-right: 1px solid var(--line); }
+.editor .gutter { padding: 12px 8px 12px 10px; text-align: right; white-space: pre; color: #4c5a85; font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; min-width: 2ch; user-select: none; }
+.editor .code { position: relative; flex: 1; min-width: 0; overflow: hidden; }
+.editor .shade { position: absolute; left: 0; top: 0; margin: 0; padding: 12px; pointer-events: none; color: #dfe6ff; font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; tab-size: 4; white-space: pre; }
+.shade i { font-style: normal; }
+.t-k { color: #7aa2ff; } .t-s { color: #9ece6a; } .t-n { color: #ff9e64; } .t-c { color: #5c6a94; font-style: italic !important; } .t-f { color: #e0af68; } .t-a { color: #bb9af7; }
+.editor textarea { position: relative; color: transparent; caret-color: #dfe6ff; -webkit-text-fill-color: transparent;
+  display: block; width: 100%; min-height: 42vh; resize: vertical; border: 0; outline: 0; background: transparent; color: #dfe6ff; font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; padding: 12px; tab-size: 4; white-space: pre; overflow: auto; }
 .keys { display: flex; gap: 6px; overflow-x: auto; padding: 8px 0; scrollbar-width: none; }
 .keys::-webkit-scrollbar { display: none; }
 .keys button { flex: none; min-width: 40px; height: 38px; border-radius: 9px; border: 1px solid var(--line); background: var(--bg2); font: 600 15px ui-monospace, monospace; }

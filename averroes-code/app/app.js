@@ -127,16 +127,61 @@ const sameOutput = (a, b) => {
   return x.length === y.length && x.every((v, i) => v === y[i]);
 };
 
-// An editor with a row of symbol keys that phone keyboards hide.
+// Colours for code: one regex per language, each match painted by its group.
+const KW = {
+  python: 'and as assert async await break class continue def del elif else except False finally for from global if import in is lambda None nonlocal not or pass raise return True try while with yield print input len range int str float list dict set',
+  javascript: 'async await break case catch class const continue default delete do else export extends false finally for function if import in instanceof let new null of return static super switch this throw true try typeof undefined var void while yield console',
+  c: 'auto break case char const continue default do double else enum extern float for goto if int long return short signed sizeof static struct switch typedef union unsigned void while bool true false include define using namespace std class public private protected new delete template typename cout cin endl vector string',
+  java: 'abstract boolean break byte case catch char class continue default do double else enum extends final finally float for if implements import int interface long new null package private protected public return short static super switch this throw throws true false try void while String System',
+};
+KW.cpp = KW.c;
+const escH = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+function paintCode(code, lang) {
+  if (lang === 'html') {
+    return escH(code).replace(/(&lt;!--[\s\S]*?--&gt;)|(&lt;\/?)([\w-]+)|([\w-]+)(=)(&quot;[^&]*&quot;|"[^"]*")/g,
+      (m, com, lt, tag, attr, eq, val) => (com ? `<i class="t-c">${com}</i>` : tag ? `${lt}<i class="t-k">${tag}</i>` : `<i class="t-a">${attr}</i>${eq}<i class="t-s">${val}</i>`));
+  }
+  const kws = new Set((KW[lang] || KW.python).split(' '));
+  const comment = lang === 'python' ? '#.*' : '\\/\\/.*|\\/\\*[\\s\\S]*?(?:\\*\\/|$)';
+  const re = new RegExp(`(${comment})|("(?:\\\\.|[^"\\\\\\n])*"?|'(?:\\\\.|[^'\\\\\\n])*'?|\`[^\`]*\`?)|(\\b\\d[\\d._]*\\b)|([A-Za-z_]\\w*)(\\s*\\()?|(#\\s*\\w+)`, 'g');
+  let out = ''; let last = 0;
+  code.replace(re, (m, com, str, num, word, call, pre, at) => {
+    out += escH(code.slice(last, at)); last = at + m.length;
+    if (com) out += `<i class="t-c">${escH(com)}</i>`;
+    else if (str) out += `<i class="t-s">${escH(str)}</i>`;
+    else if (num) out += `<i class="t-n">${num}</i>`;
+    else if (pre) out += `<i class="t-k">${escH(pre)}</i>`;
+    else if (kws.has(word)) out += `<i class="t-k">${word}</i>${call || ''}`;
+    else if (call) out += `<i class="t-f">${word}</i>${call}`;
+    else out += word;
+    return m;
+  });
+  return out + escH(code.slice(last));
+}
+
+// An editor with line numbers, colours and a row of symbol keys that phone keyboards hide.
 function editor(value, onChange, lang = 'python') {
   const ta = h('textarea', { spellcheck: 'false', autocapitalize: 'off', autocomplete: 'off', autocorrect: 'off', 'aria-label': 'Code' });
+  const gutter = h('div', { class: 'gutter', 'aria-hidden': 'true' });
+  const shade = h('pre', { class: 'shade', 'aria-hidden': 'true' });
   ta.value = value;
-  ta.addEventListener('input', () => onChange(ta.value));
+  const repaint = () => {
+    const n = ta.value.split('\n').length;
+    if (gutter.childElementCount !== n) gutter.textContent = Array.from({ length: n }, (_, i) => i + 1).join('\n');
+    shade.innerHTML = `${paintCode(ta.value, lang)}\n`;
+    shade.style.transform = `translate(${-ta.scrollLeft}px, ${-ta.scrollTop}px)`;
+    gutter.style.transform = `translateY(${-ta.scrollTop}px)`;
+  };
+  ta.addEventListener('scroll', () => {
+    shade.style.transform = `translate(${-ta.scrollLeft}px, ${-ta.scrollTop}px)`;
+    gutter.style.transform = `translateY(${-ta.scrollTop}px)`;
+  });
+  ta.addEventListener('input', () => { repaint(); onChange(ta.value); });
   const insert = (text, back = 0) => {
     const s = ta.selectionStart; const e = ta.selectionEnd;
     ta.setRangeText(text, s, e, 'end');
     if (back) ta.selectionStart = ta.selectionEnd = ta.selectionStart - back;
-    ta.focus(); onChange(ta.value);
+    ta.focus(); repaint(); onChange(ta.value);
   };
   ta.addEventListener('keydown', (e) => {
     if (e.key === 'Tab') { e.preventDefault(); insert('    '); }
@@ -150,8 +195,9 @@ function editor(value, onChange, lang = 'python') {
   const keys = ['⇥', '(', ')', '{', '}', '[', ']', ':', ';', '"', "'", '=', '<', '>', '+', '-', '*', '/', '%', '!', '&', '|', '#', '_', '.', ','];
   const pairs = { '(': ')', '{': '}', '[': ']', '"': '"', "'": "'" };
   const bar = h('div', { class: 'keys' }, ...keys.map((k) => h('button', { type: 'button', onmousedown: (e) => e.preventDefault(), onclick: () => (k === '⇥' ? insert('    ') : pairs[k] ? insert(k + pairs[k], 1) : insert(k)) }, k)));
-  const wrap = h('div', {}, h('div', { class: 'editor' }, ta), bar);
+  const wrap = h('div', {}, h('div', { class: 'editor' }, h('div', { class: 'gut' }, gutter), h('div', { class: 'code' }, shade, ta)), bar);
   wrap.textarea = ta;
+  requestAnimationFrame(repaint);
   wrap.lang = lang;
   return wrap;
 }
