@@ -473,6 +473,82 @@ async function problemView(id) {
 }
 
 // ---------- More tab ----------
+// ---------- My projects: the same account as the desktop app ----------
+const FB = { key: 'AIzaSyCzrq7-bUqGZ0XbKyH97UEAcP4Noi26FFM', project: 'averroes-code-5a5b8' };
+const FB_DOCS = `https://firestore.googleapis.com/v1/projects/${FB.project}/databases/(default)/documents`;
+async function fbFetch(url, body, method = 'POST', tok) {
+  const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json', ...(tok ? { Authorization: `Bearer ${tok}` } : {}) }, body: body ? JSON.stringify(body) : undefined });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error((data.error && data.error.message) || `HTTP ${res.status}`);
+  return data;
+}
+async function account() {
+  const a = store.get('account', null);
+  if (!a) return null;
+  if (a.expires > Date.now() + 60000) return a;
+  const r = await fbFetch(`https://securetoken.googleapis.com/v1/token?key=${FB.key}`, { grant_type: 'refresh_token', refresh_token: a.refreshToken });
+  Object.assign(a, { idToken: r.id_token, refreshToken: r.refresh_token, expires: Date.now() + Number(r.expires_in) * 1000 });
+  store.set('account', a);
+  return a;
+}
+const EXT_LANG = { py: 'python', js: 'javascript', c: 'c', h: 'c', cpp: 'cpp', cc: 'cpp', html: 'html', htm: 'html', java: 'java' };
+function syncBox() {
+  const box = h('div', { class: 'card' });
+  const signedOut = () => {
+    const email = h('input', { type: 'text', placeholder: 'Email', autocomplete: 'email', style: 'width:100%;margin-bottom:8px' });
+    const pass = h('input', { type: 'password', placeholder: 'Password', style: 'width:100%;margin-bottom:8px' });
+    const msg = h('p', { class: 'muted small' }, 'Use the same email as in the desktop app to see your projects here.');
+    const go = (create) => async () => {
+      msg.textContent = 'Please wait…';
+      try {
+        const r = await fbFetch(`https://identitytoolkit.googleapis.com/v1/accounts:${create ? 'signUp' : 'signInWithPassword'}?key=${FB.key}`, { email: email.value.trim(), password: pass.value, returnSecureToken: true });
+        store.set('account', { email: r.email, uid: r.localId, idToken: r.idToken, refreshToken: r.refreshToken, expires: Date.now() + Number(r.expiresIn) * 1000 });
+        paint();
+      } catch (e) {
+        const m = String(e.message);
+        msg.textContent = /INVALID_LOGIN|INVALID_PASSWORD|EMAIL_NOT_FOUND/.test(m) ? 'Wrong email or password.' : /EMAIL_EXISTS/.test(m) ? 'This email already has an account. Press Sign in.' : /WEAK_PASSWORD/.test(m) ? 'Use at least 6 characters.' : /OPERATION_NOT_ALLOWED|ADMIN_ONLY/.test(m) ? 'Email sign-in is not turned on yet.' : navigator.onLine ? m : 'No internet connection.';
+      }
+    };
+    box.replaceChildren(email, pass, h('div', { class: 'btns' }, h('button', { class: 'btn primary', onclick: go(false) }, 'Sign in'), h('button', { class: 'btn', onclick: go(true) }, 'Create account')), msg);
+  };
+  async function files(a, p) {
+    const r = await fbFetch(`${FB_DOCS}/users/${a.uid}/projects/${encodeURIComponent(p.key)}/files?pageSize=300`, null, 'GET', a.idToken);
+    const list = (r.documents || []).map((d) => ({ id: d.name.split('/').pop(), path: d.fields.path.stringValue, content: d.fields.content.stringValue || '', deleted: d.fields.deleted && d.fields.deleted.booleanValue })).filter((f) => !f.deleted).sort((x, y) => x.path.localeCompare(y.path));
+    box.replaceChildren(h('button', { class: 'back', onclick: paint }, '‹ My projects'), h('h3', {}, p.name),
+      ...list.map((f) => h('button', { class: 'btn', style: 'display:block;width:100%;text-align:left;margin-bottom:6px', onclick: () => open(a, p, f) }, f.path)));
+  }
+  function open(a, p, f) {
+    let code = f.content;
+    const lang = EXT_LANG[(f.path.split('.').pop() || '').toLowerCase()] || 'python';
+    const msg = h('span', { class: 'muted small' }, '');
+    const save = async () => {
+      msg.textContent = 'Saving…';
+      try {
+        const t = await account();
+        await fbFetch(`${FB_DOCS}/users/${t.uid}/projects/${encodeURIComponent(p.key)}/files/${f.id}`, { fields: { path: { stringValue: f.path }, content: { stringValue: code }, updated: { integerValue: String(Date.now()) }, deleted: { booleanValue: false } } }, 'PATCH', t.idToken);
+        f.content = code; msg.textContent = 'Saved. Your computer gets it at its next sync.';
+      } catch (e) { msg.textContent = navigator.onLine ? e.message : 'No internet. Try again when online.'; }
+    };
+    box.replaceChildren(h('button', { class: 'back', onclick: () => files(a, p) }, `‹ ${p.name}`), h('h3', {}, f.path),
+      editor(code, (v) => { code = v; }, lang), h('div', { class: 'btns' }, h('button', { class: 'btn primary', onclick: save }, 'Save'), msg));
+  }
+  async function paint() {
+    let a = null;
+    try { a = await account(); } catch { /* offline */ }
+    if (!a) return signedOut();
+    box.replaceChildren(h('p', { class: 'muted small' }, `Signed in as ${a.email}. Loading your projects…`));
+    try {
+      const r = await fbFetch(`${FB_DOCS}/users/${a.uid}/projects?pageSize=200`, null, 'GET', a.idToken);
+      const list = (r.documents || []).map((d) => ({ key: d.name.split('/').pop(), name: (d.fields && d.fields.name && d.fields.name.stringValue) || d.name.split('/').pop() }));
+      box.replaceChildren(h('p', { class: 'muted small' }, `Signed in as ${a.email}`),
+        ...(list.length ? list.map((p) => h('button', { class: 'btn', style: 'display:block;width:100%;text-align:left;margin-bottom:6px', onclick: () => files(a, p) }, `📁 ${p.name}`)) : [h('p', { class: 'muted' }, 'No projects yet. Sign in on the desktop app with the same email and open a project.')]),
+        h('button', { class: 'btn', onclick: () => { store.set('account', null); paint(); } }, 'Sign out'));
+    } catch (e) { box.replaceChildren(h('p', { class: 'muted' }, navigator.onLine ? e.message : 'Connect to the internet to see your projects.'), h('button', { class: 'btn', onclick: paint }, 'Try again')); }
+  }
+  paint();
+  return box;
+}
+
 function moreTab() {
   const p = progress();
   const lessons = Object.keys(p).length;
@@ -480,6 +556,8 @@ function moreTab() {
   return h('div', {},
     h('h1', {}, 'More'),
     h('div', { class: 'stat' }, h('div', { class: 'card' }, h('b', {}, String(lessons)), h('span', { class: 'muted small' }, 'lessons started')), h('div', { class: 'card' }, h('b', {}, String(solved)), h('span', { class: 'muted small' }, 'problems solved')), h('div', { class: 'card' }, h('b', {}, navigator.onLine ? 'On' : 'Off'), h('span', { class: 'muted small' }, 'internet'))),
+    h('h2', {}, 'My projects (same account as the computer)'),
+    syncBox(),
     h('h2', {}, 'Install on your phone'),
     installHelp(),
     h('h2', {}, 'Get the full app'),
