@@ -90,11 +90,13 @@ function md(src) {
 const LANGS = {
   python: { name: 'Python', ext: 'py', starter: 'name = input("Your name: ")\nprint("Hello,", name)\n' },
   javascript: { name: 'JavaScript', ext: 'js', starter: 'const nums = [3, 1, 2];\nnums.sort((a, b) => a - b);\nconsole.log("Sorted:", nums.join(", "));\n' },
+  c: { name: 'C', ext: 'c', starter: '#include <stdio.h>\n\nint main() {\n    int a, b;\n    scanf("%d %d", &a, &b);\n    printf("Sum = %d\\n", a + b);\n    return 0;\n}\n' },
+  cpp: { name: 'C++', ext: 'cpp', starter: '#include <iostream>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;\n    for (int i = 1; i <= n; i++) cout << i * i << " ";\n    cout << endl;\n    return 0;\n}\n' },
   html: { name: 'HTML / CSS / JS', ext: 'html', starter: '<!DOCTYPE html>\n<html>\n<head>\n<style>\n  body { font-family: sans-serif; text-align: center; padding: 30px; }\n  button { font-size: 20px; padding: 10px 20px; }\n</style>\n</head>\n<body>\n  <h1>Hello!</h1>\n  <button onclick="n++; this.textContent = \'Clicked \' + n">Click me</button>\n  <script>let n = 0;</script>\n</body>\n</html>\n' },
 };
 const workers = {};
 function worker(kind) {
-  if (!workers[kind]) workers[kind] = new Worker(kind === 'python' ? 'py-worker.js' : 'js-worker.js');
+  if (!workers[kind]) workers[kind] = new Worker(kind === 'python' ? 'py-worker.js' : kind === 'c' || kind === 'cpp' ? 'cpp-worker.js' : 'js-worker.js');
   return workers[kind];
 }
 // Run once with stdin; a stuck program is stopped after `limit` ms.
@@ -228,7 +230,7 @@ function codeTab() {
     stdin.classList.toggle('hidden', lang === 'html');
   }
   async function go() {
-    const code = files[lang] ?? '';
+    const code = files[lang] ?? LANGS[lang].starter;
     if (lang === 'html') return out.page(code);
     runBtn.disabled = true;
     out.show('Running…', lang === 'python' && !workers.pyReady ? 'Starting Python (the first time it downloads, then it works offline)…' : '');
@@ -244,7 +246,7 @@ function codeTab() {
       h('button', { class: 'btn', onclick: () => share(files[lang], `main.${LANGS[lang].ext}`) }, 'Share'),
       runBtn),
     ed, stdin, out.el,
-    h('p', { class: 'muted small' }, 'C, C++, Java and TypeScript run in the desktop app. On the phone you can run Python, JavaScript and web pages.'));
+    h('p', { class: 'muted small' }, 'On the phone you can run Python, JavaScript, C, C++ and web pages. C and C++ cover beginner programs (iostream, cstdio, cmath, arrays, functions); vector, string and Java need the desktop app.'));
 }
 async function share(text, name) {
   try {
@@ -481,7 +483,7 @@ function moreTab() {
     h('h2', {}, 'Install on your phone'),
     installHelp(),
     h('h2', {}, 'Get the full app'),
-    h('p', { class: 'muted' }, 'The desktop app adds C, C++, Java and TypeScript, video courses with a narrator, contests with live boards, awards and certificates.'),
+    h('p', { class: 'muted' }, 'The desktop app adds full C and C++, Java and TypeScript, video courses with a narrator, contests with live boards, awards and certificates.'),
     h('a', { class: 'btn primary', href: '../#download' }, 'Download for Windows, Mac or Linux'),
     h('h2', {}, 'Offline'),
     h('p', { class: 'muted' }, 'Pages you open are saved on the phone. To keep every course and problem for offline use, download them once:'),

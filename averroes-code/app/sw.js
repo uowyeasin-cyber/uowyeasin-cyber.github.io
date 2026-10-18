@@ -1,9 +1,9 @@
 // Offline support: the app shell is saved at install, everything else
 // (course and problem data, the Python runtime) is saved the first time it loads.
-const VERSION = 'v2';
+const VERSION = 'v3';
 const SHELL = `shell-${VERSION}`;
 const DATA = 'data-v1';
-const FILES = ['./', 'index.html', 'app.css', 'app.js', 'js-worker.js', 'py-worker.js', 'manifest.webmanifest',
+const FILES = ['./', 'index.html', 'app.css', 'app.js', 'js-worker.js', 'py-worker.js', 'cpp-worker.js', 'manifest.webmanifest',
   'icons/icon.svg', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png'];
 
 self.addEventListener('install', (e) => {
