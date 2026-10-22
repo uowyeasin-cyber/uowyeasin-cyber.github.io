@@ -1,15 +1,14 @@
 {
-  "version": "0.4.0",
+  "version": "0.4.2",
   "notes": [
-    "Flutter live preview: see your Flutter app next to the code",
-    "Hindi and Arabic voice explanations in courses",
-    "Live tournament standings you can share, plus trophies",
-    "Run on save and one-click Save & Push",
-    "Automatic updates"
+    "AI helper picks a working model by itself (fixes the Gemini 404 error)",
+    "Status bar shows Online or Offline correctly",
+    "Share buttons (WhatsApp too) with your place, score and level on trophies, awards and certificates",
+    "Debugger, sign-in and sync, Hindi and Arabic courses (from 0.4.1)"
   ],
   "files": {
-    "windows": "https://github.com/uowyeasin-cyber/uowyeasin-cyber.github.io/releases/download/v0.4.0/Averroes-Code-Setup-0.4.0.exe",
-    "linux": "https://github.com/uowyeasin-cyber/uowyeasin-cyber.github.io/releases/download/v0.4.0/Averroes-Code-0.4.0-linux-x86_64.AppImage"
+    "windows": "https://github.com/uowyeasin-cyber/uowyeasin-cyber.github.io/releases/download/v0.4.2/Averroes-Code-Setup-0.4.2.exe",
+    "linux": "https://github.com/uowyeasin-cyber/uowyeasin-cyber.github.io/releases/download/v0.4.2/Averroes-Code-0.4.2-linux-x86_64.AppImage"
   },
   "page": "https://uowyeasin-cyber.github.io/averroes-code/#download"
 }
