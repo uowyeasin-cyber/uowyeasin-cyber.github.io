@@ -1,14 +1,16 @@
 {
-  "version": "0.4.2",
+  "version": "0.4.3",
   "notes": [
-    "AI helper picks a working model by itself (fixes the Gemini 404 error)",
-    "Status bar shows Online or Offline correctly",
-    "Share buttons (WhatsApp too) with your place, score and level on trophies, awards and certificates",
-    "Debugger, sign-in and sync, Hindi and Arabic courses (from 0.4.1)"
+    "Free AI with no key: pick \"Free AI (no key)\" and ask",
+    "Run works again after clicking an error (fixes \"Model is disposed!\")",
+    "C++ links on Windows when the user name has a space",
+    "Arabic, Bangla and Hindi lesson voices play again",
+    "Gemini busy (503): another model answers automatically",
+    "Add comments and Improve no longer copy the whole file twice"
   ],
   "files": {
-    "windows": "https://github.com/uowyeasin-cyber/uowyeasin-cyber.github.io/releases/download/v0.4.2/Averroes-Code-Setup-0.4.2.exe",
-    "linux": "https://github.com/uowyeasin-cyber/uowyeasin-cyber.github.io/releases/download/v0.4.2/Averroes-Code-0.4.2-linux-x86_64.AppImage"
+    "windows": "https://github.com/uowyeasin-cyber/uowyeasin-cyber.github.io/releases/download/v0.4.3/Averroes-Code-Setup-0.4.3.exe",
+    "linux": "https://github.com/uowyeasin-cyber/uowyeasin-cyber.github.io/releases/download/v0.4.3/Averroes-Code-0.4.3-linux-x86_64.AppImage"
   },
   "page": "https://uowyeasin-cyber.github.io/averroes-code/#download"
 }
