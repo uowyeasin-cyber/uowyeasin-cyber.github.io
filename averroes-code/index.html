@@ -86,8 +86,8 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
 <h2>Download</h2>
 <p class="sub">Choose your computer. No account needed.</p>
 <div class="dl">
-<div class="card"><h3>Windows</h3><p>Windows 10 and 11, 64-bit. Unzip, then run the installer.</p>
-<a class="btn primary" href="https://github.com/uowyeasin-cyber/uowyeasin-cyber.github.io/releases/download/v0.4.3/Averroes-Code-Setup-0.4.3-Windows.zip">Download installer</a>
+<div class="card"><h3>Windows</h3><p>Windows 10 and 11, 64-bit. Run the installer.</p>
+<a class="btn primary" href="https://github.com/uowyeasin-cyber/uowyeasin-cyber.github.io/releases/download/v0.4.3/Averroes-Code-Setup-0.4.3.exe">Download installer</a>
 <a class="alt" href="https://github.com/uowyeasin-cyber/uowyeasin-cyber.github.io/releases/download/v0.4.3/Averroes-Code-0.4.3-portable.exe">Portable version (no install)</a></div>
 <div class="card"><h3>Linux</h3><p>Ubuntu, Fedora, Debian and most others. Make it executable, then double-click.</p>
 <a class="btn primary" href="https://github.com/uowyeasin-cyber/uowyeasin-cyber.github.io/releases/download/v0.4.3/Averroes-Code-0.4.3-linux-x86_64.AppImage">Download AppImage</a></div>
@@ -128,7 +128,7 @@ footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wr
   var b = document.getElementById('main-dl'); if (!b) return;
   var u = navigator.userAgent, base = 'https://github.com/uowyeasin-cyber/uowyeasin-cyber.github.io/releases/download/v0.4.3/';
   if (/Android|iPhone|iPad|iPod/i.test(u)) { b.href = 'app/'; b.textContent = 'Open the phone app'; return; }
-  if (/Windows/i.test(u)) { b.href = base + 'Averroes-Code-Setup-0.4.3-Windows.zip'; b.textContent = 'Download for Windows'; }
+  if (/Windows/i.test(u)) { b.href = base + 'Averroes-Code-Setup-0.4.3.exe'; b.textContent = 'Download for Windows'; }
   else if (/Linux/i.test(u) && !/Android/i.test(u)) { b.href = base + 'Averroes-Code-0.4.3-linux-x86_64.AppImage'; b.textContent = 'Download for Linux'; }
 })();
 </script>
