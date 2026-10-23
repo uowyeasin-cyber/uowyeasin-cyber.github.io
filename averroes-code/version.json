@@ -1,6 +1,8 @@
 {
   "version": "0.4.3",
   "notes": [
+    "Run like OnlineGDB: type input right in the Output",
+    "New Online button: run C, C++, Python and JavaScript with nothing installed",
     "Free AI with no key: pick \"Free AI (no key)\" and ask",
     "Run works again after clicking an error (fixes \"Model is disposed!\")",
     "C++ links on Windows when the user name has a space",
